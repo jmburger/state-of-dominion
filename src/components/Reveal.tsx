@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 export default function Reveal({
   children,
@@ -14,22 +14,30 @@ export default function Reveal({
   as?: "div" | "span" | "li";
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (
+      !el ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+      !("IntersectionObserver" in window)
+    )
+      return;
+    if (el.getBoundingClientRect().top < window.innerHeight * 0.92) return;
+    el.classList.add("reveal-pending");
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setVisible(true);
+          el.classList.remove("reveal-pending");
           observer.disconnect();
         }
       },
-      { threshold: 0.15, rootMargin: "0px 0px -80px 0px" },
+      { threshold: 0.05, rootMargin: "0px 0px -24px 0px" },
     );
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      el.classList.remove("reveal-pending");
+    };
   }, []);
 
   const Component = Tag as "div";
@@ -37,8 +45,8 @@ export default function Reveal({
   return (
     <Component
       ref={ref}
-      className={`reveal ${visible ? "is-visible" : ""} ${className}`}
-      style={{ transitionDelay: visible ? `${delay}ms` : "0ms" }}
+      className={`reveal ${className}`}
+      style={{ transitionDelay: `${delay}ms` }}
     >
       {children}
     </Component>

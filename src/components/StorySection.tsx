@@ -1,37 +1,46 @@
+import { IconArrowUpRight } from "@tabler/icons-react";
 import Reveal from "./Reveal";
 
 export default function StorySection() {
   return (
-    <section className="relative bg-background py-24 sm:py-32">
-      <div className="max-w-2xl mx-auto px-5 sm:px-8 text-center">
-        <Reveal>
-          <h2 className="font-display text-3xl sm:text-4xl">Dominion</h2>
-        </Reveal>
-        <Reveal delay={100}>
-          <p className="mt-5 text-xs sm:text-sm tracking-[0.2em] uppercase text-foreground/85">
-            Authority. Sovereignty. Command over your own domain.
+    <section id="story" className="story-section" aria-labelledby="story-title">
+      <div className="section-index eyebrow">
+        <span>01 / The state of mind</span>
+        <span>More than a name</span>
+      </div>
+      <div className="story-grid">
+        <Reveal className="story-heading">
+          <div className="dictionary-word">
+            <h2 id="story-title">Dominion</h2>
+            <span className="eyebrow">/ dəˈmɪnjən / &nbsp; noun</span>
+          </div>
+          <p className="story-definition">
+            Authority. Sovereignty.
+            <br />
+            <em>Command over your own domain.</em>
           </p>
+          <span className="story-asterisk" aria-hidden="true">
+            ✳
+          </span>
         </Reveal>
-
-        <Reveal delay={180}>
-          <p className="mt-10 text-muted text-sm sm:text-base leading-relaxed">
-            To us, Dominion is about knowing yourself. Your presence, your
-            choices, your sense of self. A quiet confidence that doesn&rsquo;t
-            need to announce itself.
+        <Reveal delay={120} className="story-copy">
+          <p className="story-lead">
+            It starts with
+            <br />
+            knowing <em>yourself.</em>
           </p>
-        </Reveal>
-        <Reveal delay={240}>
-          <p className="mt-6 text-muted text-sm sm:text-base leading-relaxed">
+          <p>
+            Your presence. Your choices. Your sense of self. A quiet confidence
+            that doesn&rsquo;t need to announce itself.
+          </p>
+          <p>
             State of Dominion was built with that same intention. Denim for the
             tall-ish frame that South African denim forgot. Heavy fabric. Real
             structure. Longer lengths and considered fits that hold their shape.
           </p>
-        </Reveal>
-
-        <Reveal delay={320}>
-          <p className="mt-10 font-display italic text-lg sm:text-xl text-foreground/90">
-            Made to feel like yours
-          </p>
+          <a href="#details" className="text-link">
+            Get to know the details <IconArrowUpRight size={18} stroke={1.5} />
+          </a>
         </Reveal>
       </div>
     </section>

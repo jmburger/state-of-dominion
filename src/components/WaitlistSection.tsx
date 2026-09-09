@@ -2,11 +2,14 @@
 
 import {
   IconAlertCircle,
-  IconCircleCheck,
+  IconArrowUpRight,
+  IconCheck,
   IconLoader2,
 } from "@tabler/icons-react";
+import Link from "next/link";
 import { type FormEvent, useState } from "react";
 import Reveal from "./Reveal";
+import styles from "./WaitlistFooter.module.css";
 
 type Status = "idle" | "submitting" | "success" | "error";
 
@@ -14,38 +17,41 @@ export default function WaitlistSection() {
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (status === "submitting") return;
+
+    const formData = new FormData(event.currentTarget);
     setStatus("submitting");
     setErrorMessage("");
 
     try {
-      const res = await fetch("/api/subscribe", {
+      const response = await fetch("/api/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          firstName: formData.get("firstName"),
-          lastName: formData.get("lastName"),
-          email: formData.get("email"),
+          firstName: String(formData.get("firstName") ?? "").trim(),
+          lastName: String(formData.get("lastName") ?? "").trim(),
+          email: String(formData.get("email") ?? "").trim(),
         }),
       });
+      const data = await response.json().catch(() => null);
 
-      const data = await res.json();
-
-      if (!res.ok || !data.ok) {
+      if (!response.ok || !data?.ok) {
         throw new Error(
-          data.error || "Something went wrong. Please try again.",
+          typeof data?.error === "string"
+            ? data.error
+            : "We couldn’t save your details. Please try again.",
         );
       }
 
       setStatus("success");
-    } catch (err) {
+    } catch (error) {
       setStatus("error");
       setErrorMessage(
-        err instanceof Error
-          ? err.message
-          : "Something went wrong. Please try again.",
+        error instanceof Error
+          ? error.message
+          : "We couldn’t save your details. Please try again.",
       );
     }
   }
@@ -53,100 +59,131 @@ export default function WaitlistSection() {
   return (
     <section
       id="subscribe"
-      className="relative bg-background py-24 sm:py-32 border-t border-border"
+      className={styles["waitlist-section"]}
+      aria-labelledby="waitlist-title"
     >
-      <div className="max-w-md mx-auto px-5 sm:px-8 text-center">
-        <Reveal>
-          <h2 className="font-display text-2xl sm:text-3xl">
-            Be among the first
+      <div className={styles["waitlist-layout"]}>
+        <Reveal className={styles["waitlist-introduction"]}>
+          <p className={styles["waitlist-eyebrow"]}>03 / The first chapter</p>
+          <h2 id="waitlist-title" className={styles["waitlist-title"]}>
+            Good things.
+            <br />
+            <em>Worth the wait.</em>
           </h2>
+          <p className={styles["waitlist-description"]}>
+            Your next favourite denim is taking shape. Join the waitlist to hear
+            from State of Dominion as our first chapter unfolds.
+          </p>
+          <span className={styles["waitlist-flourish"]} aria-hidden="true">
+            S<span>of</span>D
+          </span>
         </Reveal>
 
-        {status === "success" ? (
-          <Reveal delay={100}>
-            <div className="mt-10 flex flex-col items-center gap-3">
-              <IconCircleCheck size={36} className="text-foreground/80" />
-              <p className="text-sm text-muted leading-relaxed">
-                Thank you for joining the waitlist. We&rsquo;ll be in touch when
-                the wait is over.
-              </p>
-            </div>
-          </Reveal>
-        ) : (
-          <Reveal delay={100}>
+        <Reveal delay={120} className={styles["waitlist-form-panel"]}>
+          <div aria-live="polite" aria-atomic="true">
+            {status === "success" && (
+              <div className={styles["waitlist-success"]}>
+                <span className={styles["waitlist-success-icon"]}>
+                  <IconCheck size={24} stroke={1.3} aria-hidden="true" />
+                </span>
+                <p className={styles["waitlist-eyebrow"]}>You’re on the list</p>
+                <h3>A little anticipation.</h3>
+                <p>
+                  Thank you for joining us. We’ll be in touch as the next
+                  chapter begins.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {status !== "success" && (
             <form
               onSubmit={handleSubmit}
-              className="mt-10 flex flex-col gap-5 text-left"
+              className={styles["waitlist-form"]}
+              aria-busy={status === "submitting"}
             >
-              <div>
-                <label
-                  htmlFor="firstName"
-                  className="block text-[0.65rem] tracking-[0.25em] uppercase text-muted mb-2"
-                >
-                  First name
-                </label>
-                <input
-                  id="firstName"
-                  name="firstName"
-                  type="text"
-                  required
-                  className="w-full bg-transparent border-b border-border pb-2 text-sm text-foreground focus:outline-none focus:border-foreground/60 transition-colors"
-                />
+              <p className={styles["waitlist-form-intro"]}>
+                Be part of what comes next.
+              </p>
+              <div className={styles["waitlist-name-fields"]}>
+                <div className={styles["waitlist-field"]}>
+                  <label htmlFor="waitlist-first-name">First name</label>
+                  <input
+                    id="waitlist-first-name"
+                    name="firstName"
+                    type="text"
+                    autoComplete="given-name"
+                    placeholder="Your first name"
+                    required
+                    disabled={status === "submitting"}
+                  />
+                </div>
+                <div className={styles["waitlist-field"]}>
+                  <label htmlFor="waitlist-last-name">
+                    Last name <span>(optional)</span>
+                  </label>
+                  <input
+                    id="waitlist-last-name"
+                    name="lastName"
+                    type="text"
+                    autoComplete="family-name"
+                    placeholder="Your last name"
+                    disabled={status === "submitting"}
+                  />
+                </div>
               </div>
-              <div>
-                <label
-                  htmlFor="lastName"
-                  className="block text-[0.65rem] tracking-[0.25em] uppercase text-muted mb-2"
-                >
-                  Last name
-                </label>
+
+              <div className={styles["waitlist-field"]}>
+                <label htmlFor="waitlist-email">Email address</label>
                 <input
-                  id="lastName"
-                  name="lastName"
-                  type="text"
-                  className="w-full bg-transparent border-b border-border pb-2 text-sm text-foreground focus:outline-none focus:border-foreground/60 transition-colors"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-[0.65rem] tracking-[0.25em] uppercase text-muted mb-2"
-                >
-                  Email
-                </label>
-                <input
-                  id="email"
+                  id="waitlist-email"
                   name="email"
                   type="email"
+                  autoComplete="email"
+                  placeholder="you@example.com"
                   required
-                  className="w-full bg-transparent border-b border-border pb-2 text-sm text-foreground focus:outline-none focus:border-foreground/60 transition-colors"
+                  disabled={status === "submitting"}
+                  aria-describedby="waitlist-consent"
                 />
               </div>
 
-              {status === "error" && errorMessage && (
-                <div className="flex items-start gap-2 text-accent text-xs">
-                  <IconAlertCircle size={15} className="shrink-0 mt-0.5" />
+              {status === "error" && (
+                <p className={styles["waitlist-error"]} role="alert">
+                  <IconAlertCircle size={17} stroke={1.5} aria-hidden="true" />
                   <span>{errorMessage}</span>
-                </div>
+                </p>
               )}
 
               <button
                 type="submit"
                 disabled={status === "submitting"}
-                className="mt-3 inline-flex items-center justify-center gap-2 py-3 text-xs tracking-[0.25em] uppercase border border-foreground/70 hover:bg-foreground hover:text-background transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                className={styles["waitlist-submit"]}
               >
+                <span>
+                  {status === "submitting"
+                    ? "Joining the list…"
+                    : "Join the waitlist"}
+                </span>
                 {status === "submitting" ? (
-                  <>
-                    <IconLoader2 size={15} className="animate-spin" />
-                    Submitting
-                  </>
+                  <IconLoader2
+                    size={20}
+                    stroke={1.4}
+                    className={styles["waitlist-spinner"]}
+                    aria-hidden="true"
+                  />
                 ) : (
-                  "Submit"
+                  <IconArrowUpRight size={22} stroke={1.3} aria-hidden="true" />
                 )}
               </button>
+
+              <p id="waitlist-consent" className={styles["waitlist-consent"]}>
+                By joining, you agree to receive launch news and updates from
+                State of Dominion. Read our{" "}
+                <Link href="/privacy-policy">privacy policy</Link>.
+              </p>
             </form>
-          </Reveal>
-        )}
+          )}
+        </Reveal>
       </div>
     </section>
   );

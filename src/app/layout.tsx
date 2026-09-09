@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Jost, Playfair_Display } from "next/font/google";
+import { Cormorant_Garamond, Jost } from "next/font/google";
 import "./globals.css";
 
 const jost = Jost({
@@ -8,15 +8,15 @@ const jost = Jost({
   weight: ["300", "400", "500", "600"],
 });
 
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
+const display = Cormorant_Garamond({
+  variable: "--font-cormorant",
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
-  title: "State of Dominion | Coming Soon",
+  title: "State of Dominion | A State of Your Own",
   description:
     "State of Dominion — denim built with intention. Heavy fabric, real structure, longer lengths and considered fits. Est. 2025. Be among the first.",
 };
@@ -27,8 +27,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${jost.variable} ${playfair.variable} h-full`}>
-      <body className="min-h-full antialiased">{children}</body>
+    <html lang="en" className={`${jost.variable} ${display.variable} h-full`}>
+      <body id="top" className="min-h-full antialiased">
+        {children}
+      </body>
     </html>
   );
 }

@@ -1,42 +1,33 @@
-import {
-  IconBrandFacebook,
-  IconBrandInstagram,
-  IconBrandX,
-} from "@tabler/icons-react";
-
-const socialLinks = [
-  { href: "#", label: "X (Twitter)", icon: IconBrandX },
-  { href: "#", label: "Instagram", icon: IconBrandInstagram },
-  { href: "#", label: "Facebook", icon: IconBrandFacebook },
-];
+import { IconArrowUpRight } from "@tabler/icons-react";
+import Link from "next/link";
+import styles from "./WaitlistFooter.module.css";
 
 export default function Footer() {
   return (
-    <footer className="border-t border-border bg-background">
-      <div className="max-w-7xl mx-auto px-5 sm:px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <p className="text-[0.65rem] tracking-[0.2em] uppercase text-muted">
-          © {new Date().getFullYear()} State of Dominion. All rights reserved.
-        </p>
+    <footer className={styles["footer-section"]}>
+      <div className={styles["footer-topline"]}>
+        <p>Considered denim. A state of mind.</p>
+        <Link href="/#top" className={styles["footer-back-top"]}>
+          Back to top{" "}
+          <IconArrowUpRight size={17} stroke={1.3} aria-hidden="true" />
+        </Link>
+      </div>
 
-        <div className="flex items-center gap-4">
-          {socialLinks.map(({ href, label, icon: Icon }) => (
-            <a
-              key={label}
-              href={href}
-              aria-label={label}
-              className="text-foreground/70 hover:text-foreground transition-colors"
-            >
-              <Icon size={15} stroke={1.5} />
-            </a>
-          ))}
-        </div>
+      <Link
+        href="/"
+        className={styles["footer-wordmark"]}
+        aria-label="State of Dominion home"
+      >
+        <span className={styles["footer-wordmark-prefix"]}>
+          STATE <em>of</em>
+        </span>
+        <span className={styles["footer-wordmark-name"]}>DOMINION</span>
+      </Link>
 
-        <a
-          href="/privacy-policy"
-          className="text-[0.65rem] tracking-[0.2em] uppercase text-muted hover:text-foreground transition-colors"
-        >
-          Privacy Policy
-        </a>
+      <div className={styles["footer-bottomline"]}>
+        <p>© {new Date().getFullYear()} State of Dominion</p>
+        <p className={styles["footer-origin"]}>South Africa</p>
+        <Link href="/privacy-policy">Privacy policy</Link>
       </div>
     </footer>
   );
