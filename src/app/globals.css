@@ -533,9 +533,8 @@ body:has(.mobile-menu[open]) {
   display: block;
   margin-top: 39px;
   color: #81856e;
-  font-size: 75px;
-  line-height: 1;
-  width: fit-content;
+  width: 60px;
+  height: 60px;
   transition: transform 700ms var(--ease-out);
 }
 .story-heading:hover .story-asterisk {
@@ -1009,7 +1008,7 @@ body:has(.mobile-menu[open]) {
     padding-top: 38px;
   }
   .dictionary-word h2 {
-    font-size: 70px;
+    font-size: clamp(60px, 18vw, 70px);
     margin-bottom: 12px;
   }
   .dictionary-word .eyebrow {
@@ -1021,8 +1020,9 @@ body:has(.mobile-menu[open]) {
   }
   .story-asterisk {
     position: absolute;
-    font-size: 43px;
-    top: 5px;
+    width: 36px;
+    height: 36px;
+    top: 17px;
     right: 0;
     margin: 0;
   }

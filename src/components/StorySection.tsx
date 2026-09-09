@@ -19,9 +19,17 @@ export default function StorySection() {
             <br />
             <em>Command over your own domain.</em>
           </p>
-          <span className="story-asterisk" aria-hidden="true">
-            ✳
-          </span>
+          <svg
+            className="story-asterisk"
+            viewBox="0 0 32 32"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.2"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="M16 2v28M2 16h28M6 6l20 20M6 26 26 6" />
+          </svg>
         </Reveal>
         <Reveal delay={120} className="story-copy">
           <p className="story-lead">
