@@ -11,38 +11,19 @@ import {
 } from "motion/react";
 import { useAnimate } from "motion/react-mini";
 import Image from "next/image";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState } from "react";
 import ArrowIcon from "./ArrowIcon";
-
-const reducedMotionQuery = "(prefers-reduced-motion: reduce)";
-
-function subscribeToReducedMotion(onChange: () => void) {
-  const preference = window.matchMedia(reducedMotionQuery);
-  preference.addEventListener("change", onChange);
-  return () => preference.removeEventListener("change", onChange);
-}
-
-function getReducedMotion() {
-  return window.matchMedia(reducedMotionQuery).matches;
-}
-
-function getServerReducedMotion() {
-  return true;
-}
 
 export default function Hero() {
   const section = useRef<HTMLElement>(null);
   const [scope, animate] = useAnimate<HTMLElement>();
-  const reducedMotion = useSyncExternalStore(
-    subscribeToReducedMotion,
-    getReducedMotion,
-    getServerReducedMotion,
-  );
   const inView = useInView(scope, { amount: 0.1 });
-  const [paused, setPaused] = useState(false);
-  const [motionOverride, setMotionOverride] = useState(false);
-  const motionEnabled = !reducedMotion || motionOverride;
-  const playing = motionEnabled && !paused;
+  const [motionEnabled, setMotionEnabled] = useState(false);
+
+  useEffect(() => {
+    setMotionEnabled(true);
+  }, []);
+
   const playback = useRef<ReturnType<typeof animate>[]>([]);
   const { scrollYProgress } = useScroll({
     target: section,
@@ -60,7 +41,7 @@ export default function Hero() {
   const scrollHintOpacity = useTransform(progress, [0, 0.12], [1, 0]);
 
   useMotionValueEvent(scrollYProgress, "change", (value) => {
-    if (motionEnabled && !paused) progress.set(value);
+    if (motionEnabled) progress.set(value);
   });
 
   useEffect(() => {
@@ -109,19 +90,19 @@ export default function Hero() {
 
   useEffect(() => {
     function syncPlayback() {
-      const playing = motionEnabled && !paused && inView && !document.hidden;
+      const playing = motionEnabled && inView && !document.hidden;
       playback.current.forEach((animation) => {
         if (playing) animation.play();
         else animation.pause();
       });
       if (!motionEnabled) progress.set(0);
-      else if (!paused && !document.hidden) progress.set(scrollYProgress.get());
+      else if (!document.hidden) progress.set(scrollYProgress.get());
     }
 
     syncPlayback();
     document.addEventListener("visibilitychange", syncPlayback);
     return () => document.removeEventListener("visibilitychange", syncPlayback);
-  }, [inView, motionEnabled, paused, progress, scrollYProgress]);
+  }, [inView, motionEnabled, progress, scrollYProgress]);
 
   return (
     <section
@@ -209,38 +190,6 @@ export default function Hero() {
             <ArrowIcon direction="down" className="scroll-arrow" />
           </motion.span>
         </figcaption>
-        {inView && (
-          <button
-            type="button"
-            className="campaign-motion-toggle"
-            aria-label={
-              playing ? "Pause campaign animation" : "Play campaign animation"
-            }
-            onClick={() => {
-              if (!motionEnabled) {
-                setMotionOverride(true);
-                setPaused(false);
-              } else {
-                setPaused((value) => !value);
-              }
-            }}
-          >
-            <svg
-              width="10"
-              height="12"
-              viewBox="0 0 10 12"
-              fill="currentColor"
-              aria-hidden="true"
-            >
-              {!playing ? (
-                <path d="M1 1 9 6 1 11Z" />
-              ) : (
-                <path d="M1 1h2v10H1zM7 1h2v10H7z" />
-              )}
-            </svg>
-            {playing ? "Pause" : "Play"}
-          </button>
-        )}
       </figure>
     </section>
   );
