@@ -1,56 +1,20 @@
-import { IconArrowUpRight } from "@tabler/icons-react";
 import Reveal from "./Reveal";
 
 export default function StorySection() {
   return (
-    <section id="story" className="story-section" aria-labelledby="story-title">
-      <div className="section-index eyebrow">
-        <span>01 / The state of mind</span>
-        <span>More than a name</span>
-      </div>
-      <div className="story-grid">
-        <Reveal className="story-heading">
-          <div className="dictionary-word">
-            <h2 id="story-title">Dominion</h2>
-            <span className="eyebrow">/ dəˈmɪnjən / &nbsp; noun</span>
-          </div>
-          <p className="story-definition">
-            Authority. Sovereignty.
-            <br />
-            <em>Command over your own domain.</em>
-          </p>
-          <svg
-            className="story-asterisk"
-            viewBox="0 0 32 32"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.2"
-            aria-hidden="true"
-            focusable="false"
-          >
-            <path d="M16 2v28M2 16h28M6 6l20 20M6 26 26 6" />
-          </svg>
-        </Reveal>
-        <Reveal delay={120} className="story-copy">
-          <p className="story-lead">
-            It starts with
-            <br />
-            knowing <em>yourself.</em>
-          </p>
-          <p>
-            Your presence. Your choices. Your sense of self. A quiet confidence
-            that doesn&rsquo;t need to announce itself.
-          </p>
-          <p>
-            State of Dominion was built with that same intention. Denim for the
-            tall-ish frame that South African denim forgot. Heavy fabric. Real
-            structure. Longer lengths and considered fits that hold their shape.
-          </p>
-          <a href="#details" className="text-link">
-            Get to know the details <IconArrowUpRight size={18} stroke={1.5} />
-          </a>
-        </Reveal>
-      </div>
+    <section id="story" className="brand-note" aria-labelledby="story-title">
+      <Reveal>
+        <h2 id="story-title">Made to feel like yours.</h2>
+      </Reveal>
+      <Reveal delay={100}>
+        <p>
+          Denim for the tall-ish frame. Heavy fabric, longer lengths, and
+          considered fits. Designed with a quiet confidence.
+        </p>
+      </Reveal>
+      <Reveal delay={180}>
+        <span className="brand-origin">State of Dominion — South Africa</span>
+      </Reveal>
     </section>
   );
 }

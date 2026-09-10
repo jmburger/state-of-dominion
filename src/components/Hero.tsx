@@ -1,100 +1,236 @@
-import { IconArrowDown, IconArrowUpRight } from "@tabler/icons-react";
+"use client";
+
+import {
+  type MotionStyle,
+  motion,
+  useInView,
+  useMotionValue,
+  useMotionValueEvent,
+  useScroll,
+  useTransform,
+} from "motion/react";
+import { useAnimate } from "motion/react-mini";
 import Image from "next/image";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+
+const reducedMotionQuery = "(prefers-reduced-motion: reduce)";
+
+function subscribeToReducedMotion(onChange: () => void) {
+  const preference = window.matchMedia(reducedMotionQuery);
+  preference.addEventListener("change", onChange);
+  return () => preference.removeEventListener("change", onChange);
+}
+
+function getReducedMotion() {
+  return window.matchMedia(reducedMotionQuery).matches;
+}
+
+function getServerReducedMotion() {
+  return true;
+}
 
 export default function Hero() {
+  const section = useRef<HTMLElement>(null);
+  const [scope, animate] = useAnimate<HTMLElement>();
+  const reducedMotion = useSyncExternalStore(
+    subscribeToReducedMotion,
+    getReducedMotion,
+    getServerReducedMotion,
+  );
+  const inView = useInView(scope, { amount: 0.1 });
+  const [paused, setPaused] = useState(false);
+  const playback = useRef<ReturnType<typeof animate>[]>([]);
+  const { scrollYProgress } = useScroll({
+    target: section,
+    offset: ["start start", "end end"],
+  });
+  const progress = useMotionValue(0);
+  const imageCrop = useTransform(progress, [0, 0.7], [1, 0]);
+  const imageScale = useTransform(progress, [0, 1], [1, 1.12]);
+  const comingX = useTransform(progress, [0, 0.5], ["0%", "-35%"]);
+  const soonX = useTransform(progress, [0, 0.5], ["0%", "40%"]);
+  const titleOpacity = useTransform(progress, [0, 0.14, 0.43], [1, 1, 0]);
+  const statementOpacity = useTransform(progress, [0.38, 0.62], [0, 1]);
+  const statementY = useTransform(progress, [0.38, 0.7], [48, 0]);
+  const shadeOpacity = useTransform(progress, [0.35, 0.75], [0, 0.3]);
+  const scrollHintOpacity = useTransform(progress, [0, 0.12], [1, 0]);
+
+  useMotionValueEvent(scrollYProgress, "change", (value) => {
+    if (!reducedMotion && !paused) progress.set(value);
+  });
+
+  useEffect(() => {
+    if (reducedMotion !== false) return;
+
+    const image = animate(
+      ".campaign-image",
+      { transform: ["scale(1)", "scale(1.025)", "scale(1)"] },
+      { duration: 24, ease: "easeInOut", repeat: Infinity },
+    );
+    const flash = animate(
+      ".campaign-flash",
+      { opacity: [0, 0.22, 0, 0] },
+      {
+        duration: 7.8,
+        times: [0, 0.055, 0.13, 1],
+        ease: "easeOut",
+        repeat: Infinity,
+      },
+    );
+    playback.current = [image, flash];
+    playback.current.forEach((animation) => {
+      animation.pause();
+    });
+
+    const words = scope.current.querySelectorAll(".launch-word");
+    const entrances = Array.from(words, (word, index) =>
+      animate(
+        word,
+        { transform: ["translateY(110%)", "translateY(0%)"] },
+        {
+          duration: 1.35,
+          delay: 0.2 + index * 0.2,
+          ease: [0.22, 1, 0.36, 1],
+        },
+      ),
+    );
+
+    return () => {
+      [...playback.current, ...entrances].forEach((animation) => {
+        animation.cancel();
+      });
+      playback.current = [];
+    };
+  }, [animate, reducedMotion, scope]);
+
+  useEffect(() => {
+    function syncPlayback() {
+      const playing =
+        reducedMotion === false && !paused && inView && !document.hidden;
+      playback.current.forEach((animation) => {
+        if (playing) animation.play();
+        else animation.pause();
+      });
+      if (reducedMotion) progress.set(0);
+      else if (!paused && !document.hidden) progress.set(scrollYProgress.get());
+    }
+
+    syncPlayback();
+    document.addEventListener("visibilitychange", syncPlayback);
+    return () => document.removeEventListener("visibilitychange", syncPlayback);
+  }, [inView, paused, progress, reducedMotion, scrollYProgress]);
+
   return (
-    <section className="hero" aria-labelledby="hero-title">
-      <div className="hero-copy">
-        <p className="eyebrow hero-intro">
-          <span className="status-dot" /> A new chapter in denim
-        </p>
-        <h1 id="hero-title" className="hero-title">
-          <span className="hero-line">
-            <span>A state of</span>
-          </span>
-          <span className="hero-line">
-            <em>your own.</em>
-          </span>
-        </h1>
-        <div className="hero-description">
-          <p>
-            For the way you stand.
-            <br />
-            And everything you stand for.
-          </p>
-          <p className="hero-small-copy">
-            Considered denim. Longer lengths.
-            <br />A quiet confidence that feels like you.
-          </p>
-          <a href="#subscribe" className="button button-dark">
-            Join the waitlist <IconArrowUpRight size={19} stroke={1.5} />
-          </a>
-          <span className="hero-launch-note">
-            The first collection is on its way.
-          </span>
-        </div>
-        <a href="#story" className="hero-discover">
-          <span className="circle-arrow">
-            <IconArrowDown size={17} stroke={1.5} />
-          </span>
-          Discover our state of mind
-        </a>
-      </div>
-      <div className="hero-visual">
-        <div className="hero-image-wrap">
+    <section
+      ref={section}
+      className="campaign"
+      data-scroll={reducedMotion ? undefined : "true"}
+      aria-labelledby="campaign-title"
+    >
+      <figure ref={scope} className="campaign-figure">
+        <span className="campaign-edition" aria-hidden="true">
+          S / D — 001
+        </span>
+        <motion.div
+          className="campaign-image-wrap"
+          style={
+            {
+              "--campaign-crop": reducedMotion ? 1 : imageCrop,
+              scale: reducedMotion ? 1 : imageScale,
+            } as MotionStyle
+          }
+        >
           <Image
             src="/hero.jpg"
-            alt="State of Dominion denim styled with a white shirt in the South African afternoon light"
+            alt="State of Dominion dark denim with a white shirt, photographed in South Africa"
             fill
             priority
-            sizes="(max-width: 700px) 100vw, 55vw"
-            className="hero-image"
+            sizes="100vw"
+            className="campaign-image"
           />
-        </div>
-        <div className="hero-image-top eyebrow">
-          <span>State of Dominion</span>
-          <span>Est. 2025</span>
-        </div>
-        <span className="hero-image-side eyebrow">
-          Presence, in every thread.
-        </span>
-        <div className="hero-image-bottom">
-          <span>Denim with intention.</span>
-          <span className="eyebrow">South Africa · Chapter 01</span>
-        </div>
-        <a
-          href="#details"
-          className="hero-seal"
-          aria-label="Explore the details: made to feel like yours"
-        >
-          <span className="sr-only">Explore the details</span>
-          <svg viewBox="0 0 120 120" className="seal-ring" aria-hidden="true">
-            <defs>
-              <path
-                id="seal-circle"
-                d="M60,60 m-43,0 a43,43 0 1,1 86,0 a43,43 0 1,1 -86,0"
-              />
-            </defs>
-            <text>
-              <textPath href="#seal-circle" textLength="270">
-                MADE TO FEEL LIKE YOURS · STATE OF DOMINION ·{" "}
-              </textPath>
-            </text>
-          </svg>
-          <span className="seal-monogram" aria-hidden="true">
-            S<span>/</span>D
-          </span>
-        </a>
-      </div>
-      <div className="hero-footnote eyebrow">
-        <span>Rooted in South Africa</span>
-        <span className="hero-footnote-center">
-          Good things take their time.
-        </span>
-        <span>
-          <span className="status-dot" /> Coming soon
-        </span>
-      </div>
+          <div className="campaign-flash" aria-hidden="true" />
+          <div className="campaign-shade" aria-hidden="true" />
+        </motion.div>
+        <motion.div
+          className="campaign-scroll-shade"
+          aria-hidden="true"
+          style={{ opacity: reducedMotion ? 0 : shadeOpacity }}
+        />
+        <figcaption className="campaign-caption">
+          <p className="launch-collection">The first collection</p>
+          <motion.h1
+            id="campaign-title"
+            className="launch-title"
+            style={{ opacity: reducedMotion ? 1 : titleOpacity }}
+          >
+            <motion.span
+              className="launch-mask"
+              style={{ x: reducedMotion ? 0 : comingX }}
+            >
+              <span className="launch-word">Coming</span>
+            </motion.span>{" "}
+            <motion.span
+              className="launch-mask"
+              style={{ x: reducedMotion ? 0 : soonX }}
+            >
+              <span className="launch-word">soon</span>
+            </motion.span>
+          </motion.h1>
+          <motion.div
+            className="campaign-statement"
+            aria-hidden="true"
+            style={{
+              opacity: reducedMotion ? 0 : statementOpacity,
+              y: reducedMotion ? 0 : statementY,
+            }}
+          >
+            <span className="campaign-statement-label">
+              A state of your own
+            </span>
+            <p>
+              Denim.
+              <br />
+              <em>On your terms.</em>
+            </p>
+          </motion.div>
+          <a href="#subscribe" className="launch-link">
+            Notify me at launch <span aria-hidden="true">↗</span>
+          </a>
+          <p className="launch-footnote">Denim. On your terms.</p>
+          <motion.span
+            className="campaign-scroll-hint"
+            aria-hidden="true"
+            style={{ opacity: reducedMotion ? 0 : scrollHintOpacity }}
+          >
+            Scroll to discover <span>↓</span>
+          </motion.span>
+        </figcaption>
+        {inView && reducedMotion === false && (
+          <button
+            type="button"
+            className="campaign-motion-toggle"
+            aria-label={
+              paused ? "Play campaign animation" : "Pause campaign animation"
+            }
+            onClick={() => setPaused((value) => !value)}
+          >
+            <svg
+              width="10"
+              height="12"
+              viewBox="0 0 10 12"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              {paused ? (
+                <path d="M1 1 9 6 1 11Z" />
+              ) : (
+                <path d="M1 1h2v10H1zM7 1h2v10H7z" />
+              )}
+            </svg>
+            {paused ? "Play" : "Pause"}
+          </button>
+        )}
+      </figure>
     </section>
   );
 }
