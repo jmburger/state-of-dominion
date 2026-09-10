@@ -12,6 +12,7 @@ import {
 import { useAnimate } from "motion/react-mini";
 import Image from "next/image";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import ArrowIcon from "./ArrowIcon";
 
 const reducedMotionQuery = "(prefers-reduced-motion: reduce)";
 
@@ -39,6 +40,9 @@ export default function Hero() {
   );
   const inView = useInView(scope, { amount: 0.1 });
   const [paused, setPaused] = useState(false);
+  const [motionOverride, setMotionOverride] = useState(false);
+  const motionEnabled = !reducedMotion || motionOverride;
+  const playing = motionEnabled && !paused;
   const playback = useRef<ReturnType<typeof animate>[]>([]);
   const { scrollYProgress } = useScroll({
     target: section,
@@ -56,11 +60,11 @@ export default function Hero() {
   const scrollHintOpacity = useTransform(progress, [0, 0.12], [1, 0]);
 
   useMotionValueEvent(scrollYProgress, "change", (value) => {
-    if (!reducedMotion && !paused) progress.set(value);
+    if (motionEnabled && !paused) progress.set(value);
   });
 
   useEffect(() => {
-    if (reducedMotion !== false) return;
+    if (!motionEnabled) return;
 
     const image = animate(
       ".campaign-image",
@@ -101,30 +105,29 @@ export default function Hero() {
       });
       playback.current = [];
     };
-  }, [animate, reducedMotion, scope]);
+  }, [animate, motionEnabled, scope]);
 
   useEffect(() => {
     function syncPlayback() {
-      const playing =
-        reducedMotion === false && !paused && inView && !document.hidden;
+      const playing = motionEnabled && !paused && inView && !document.hidden;
       playback.current.forEach((animation) => {
         if (playing) animation.play();
         else animation.pause();
       });
-      if (reducedMotion) progress.set(0);
+      if (!motionEnabled) progress.set(0);
       else if (!paused && !document.hidden) progress.set(scrollYProgress.get());
     }
 
     syncPlayback();
     document.addEventListener("visibilitychange", syncPlayback);
     return () => document.removeEventListener("visibilitychange", syncPlayback);
-  }, [inView, paused, progress, reducedMotion, scrollYProgress]);
+  }, [inView, motionEnabled, paused, progress, scrollYProgress]);
 
   return (
     <section
       ref={section}
       className="campaign"
-      data-scroll={reducedMotion ? undefined : "true"}
+      data-scroll={motionEnabled ? "true" : undefined}
       aria-labelledby="campaign-title"
     >
       <figure ref={scope} className="campaign-figure">
@@ -135,8 +138,8 @@ export default function Hero() {
           className="campaign-image-wrap"
           style={
             {
-              "--campaign-crop": reducedMotion ? 1 : imageCrop,
-              scale: reducedMotion ? 1 : imageScale,
+              "--campaign-crop": motionEnabled ? imageCrop : 1,
+              scale: motionEnabled ? imageScale : 1,
             } as MotionStyle
           }
         >
@@ -154,24 +157,24 @@ export default function Hero() {
         <motion.div
           className="campaign-scroll-shade"
           aria-hidden="true"
-          style={{ opacity: reducedMotion ? 0 : shadeOpacity }}
+          style={{ opacity: motionEnabled ? shadeOpacity : 0 }}
         />
         <figcaption className="campaign-caption">
           <p className="launch-collection">The first collection</p>
           <motion.h1
             id="campaign-title"
             className="launch-title"
-            style={{ opacity: reducedMotion ? 1 : titleOpacity }}
+            style={{ opacity: motionEnabled ? titleOpacity : 1 }}
           >
             <motion.span
               className="launch-mask"
-              style={{ x: reducedMotion ? 0 : comingX }}
+              style={{ x: motionEnabled ? comingX : 0 }}
             >
               <span className="launch-word">Coming</span>
             </motion.span>{" "}
             <motion.span
               className="launch-mask"
-              style={{ x: reducedMotion ? 0 : soonX }}
+              style={{ x: motionEnabled ? soonX : 0 }}
             >
               <span className="launch-word">soon</span>
             </motion.span>
@@ -180,8 +183,8 @@ export default function Hero() {
             className="campaign-statement"
             aria-hidden="true"
             style={{
-              opacity: reducedMotion ? 0 : statementOpacity,
-              y: reducedMotion ? 0 : statementY,
+              opacity: motionEnabled ? statementOpacity : 0,
+              y: motionEnabled ? statementY : 0,
             }}
           >
             <span className="campaign-statement-label">
@@ -194,25 +197,33 @@ export default function Hero() {
             </p>
           </motion.div>
           <a href="#subscribe" className="launch-link">
-            Notify me at launch <span aria-hidden="true">↗</span>
+            Notify me at launch <ArrowIcon className="launch-arrow" />
           </a>
           <p className="launch-footnote">Denim. On your terms.</p>
           <motion.span
             className="campaign-scroll-hint"
             aria-hidden="true"
-            style={{ opacity: reducedMotion ? 0 : scrollHintOpacity }}
+            style={{ opacity: motionEnabled ? scrollHintOpacity : 0 }}
           >
-            Scroll to discover <span>↓</span>
+            Scroll to discover
+            <ArrowIcon direction="down" className="scroll-arrow" />
           </motion.span>
         </figcaption>
-        {inView && reducedMotion === false && (
+        {inView && (
           <button
             type="button"
             className="campaign-motion-toggle"
             aria-label={
-              paused ? "Play campaign animation" : "Pause campaign animation"
+              playing ? "Pause campaign animation" : "Play campaign animation"
             }
-            onClick={() => setPaused((value) => !value)}
+            onClick={() => {
+              if (!motionEnabled) {
+                setMotionOverride(true);
+                setPaused(false);
+              } else {
+                setPaused((value) => !value);
+              }
+            }}
           >
             <svg
               width="10"
@@ -221,13 +232,13 @@ export default function Hero() {
               fill="currentColor"
               aria-hidden="true"
             >
-              {paused ? (
+              {!playing ? (
                 <path d="M1 1 9 6 1 11Z" />
               ) : (
                 <path d="M1 1h2v10H1zM7 1h2v10H7z" />
               )}
             </svg>
-            {paused ? "Play" : "Pause"}
+            {playing ? "Pause" : "Play"}
           </button>
         )}
       </figure>
