@@ -339,8 +339,16 @@ main:focus {
   padding: 112px 28px 78px;
   text-align: center;
 }
+.brand-note-eyebrow {
+  display: block;
+  margin-bottom: 14px;
+  color: var(--foreground);
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
 .brand-note h2 {
-  font-size: clamp(28px, 3vw, 40px);
+  font-size: clamp(30px, 3.6vw, 46px);
   font-weight: 400;
   letter-spacing: -0.035em;
   line-height: 1.25;
@@ -502,8 +510,13 @@ main:focus {
   .brand-note {
     padding: 70px 25px 62px;
   }
+  .brand-note-eyebrow {
+    margin-bottom: 10px;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+  }
   .brand-note h2 {
-    font-size: 28px;
+    font-size: 30px;
   }
   .brand-note p {
     margin-top: 21px;
